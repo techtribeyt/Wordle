@@ -3,7 +3,6 @@
 # sample bot to play wordle. see wordle.py for how to play.
 import random
 
-
 g_wordlist = None
 def get_wordlist():
     global g_wordlist
@@ -39,7 +38,7 @@ def play(state):
     possible = get_wordlist()
     pairs = state.split(',')
     if len(pairs) == 1:
-        return "arise"
+        return "serai"
     
     for pair in pairs:
         guess, feedback = pair.split(':')
@@ -48,12 +47,13 @@ def play(state):
       
     if len(possible) == 1:
         return possible[0]
-    min_wordcount = 1e10
+
+    num_buckets = 0
     chosen_word = ""
     # check every word in words_to_consider to see which one gives us most information
     # (allows us to cancel out the most words)
-    word_list = random.sample(get_wordlist(), 1000)
-    for word_to_guess in word_list:
+    word_list = get_wordlist()
+    for i,word_to_guess in enumerate(word_list):
         temp_eval_to_words_map = {}
         
         # evaluate with every possible answer
@@ -67,12 +67,10 @@ def play(state):
                 temp_eval_to_words_map[tuple(evaluation)].append(possible_answer)
 
 
-        # metric we are trying to minimize
-        biggest_possible_remaining_wordcount = max([len(val) for val in temp_eval_to_words_map.values()])
-        
-        # if we found a new minimum
-        if biggest_possible_remaining_wordcount < min_wordcount:
-            min_wordcount = biggest_possible_remaining_wordcount
+        # the more buckets, the lower the average
+        # goal is to maximize buckets, thus minimizing average
+        if len(temp_eval_to_words_map) > num_buckets:
+            num_buckets = len(temp_eval_to_words_map)
             chosen_word = word_to_guess
 
     return chosen_word
